@@ -287,8 +287,8 @@ CATALOGO = {
             "nombre": "Adobe Premiere Pro 2026",
             "desc": "Edición de video profesional para cine, televisión y creadores.",
             "tipo": "gdrive",
-            "valor": "https://drive.google.com/file/d/PEGA_AQUI_TU_LINK_DE_PREMIERE/view?usp=sharing",
-            "archivo_salida": "Adobe_Premiere_2026.zip",
+            "valor": "https://drive.google.com/file/d/1tNr0SDB2o_BEA0G513M9YLQunbhj0gA2/view?usp=sharing",
+            "archivo_salida": "Adobe_Premiere_Pro_2026.iso",
             "parametros": ""
         },
         {
