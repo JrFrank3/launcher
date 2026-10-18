@@ -168,6 +168,24 @@ def generar_icono_programa(id_icono, estilo, sigla, color_hex):
         w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]
         draw.text((45 - w / 2, 62 - h / 2 - 4), sigla, font=fnt, fill=color_hex)
 
+    elif estilo == "autodesk":
+        draw.rounded_rectangle([4, 4, 124, 124], radius=28, fill="#111827")
+        draw.polygon([(16, 112), (52, 16), (112, 16), (76, 112)], fill=color_hex)
+        draw.rounded_rectangle([16, 40, 112, 92], radius=10, fill="#090D16", outline=color_hex, width=3)
+        fnt = obtener_fuente(34)
+        bbox = draw.textbbox((0, 0), sigla, font=fnt)
+        w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]
+        draw.text(((size - w) / 2, (size - h) / 2 - 4), sigla, font=fnt, fill="#FFFFFF")
+
+    elif estilo == "3d":
+        draw.rounded_rectangle([4, 4, 124, 124], radius=28, fill="#14141F", outline=color_hex, width=4)
+        draw.ellipse([20, 20, 108, 108], fill=color_hex)
+        draw.ellipse([30, 30, 98, 98], fill="#14141F")
+        fnt = obtener_fuente(32)
+        bbox = draw.textbbox((0, 0), sigla, font=fnt)
+        w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]
+        draw.text(((size - w) / 2, (size - h) / 2 - 4), sigla, font=fnt, fill=color_hex)
+
     else:
         draw.rounded_rectangle([4, 4, 124, 124], radius=28, fill=color_hex)
         draw.rounded_rectangle([10, 10, 118, 118], radius=24, fill="#12131A")
@@ -176,7 +194,7 @@ def generar_icono_programa(id_icono, estilo, sigla, color_hex):
         bbox = draw.textbbox((0, 0), sigla, font=fnt)
         w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]
         draw.text(((size - w) / 2, (size - h) / 2 - 4), sigla, font=fnt, fill="#FFFFFF")
-
+    
     img.save(ruta_png, "PNG")
     return ctk.CTkImage(light_image=img, dark_image=img, size=(54, 54))
 
@@ -227,7 +245,7 @@ CATALOGO = {
             "parametros": "/silent /install"
         },
         {
-        "id": "brave", "estilo": "brave", "sigla": "Br", "color": "#FB542B",
+            "id": "brave", "estilo": "brave", "sigla": "Br", "color": "#FB542B",
             "nombre": "Brave Browser",
             "desc": "Navegador rápido con bloqueador nativo de anuncios y rastreadores.",
             "tipo": "url_directa",
@@ -236,16 +254,16 @@ CATALOGO = {
             "parametros": "/silent /install"
         },
         {
-        "id": "firefox", "estilo": "firefox", "sigla": "Fx", "color": "#FF9900",
+            "id": "firefox", "estilo": "firefox", "sigla": "Fx", "color": "#FF9900",
             "nombre": "Mozilla Firefox",
             "desc": "Navegador web rápido y seguro.",
             "tipo": "url_directa",
             "url": "https://download.mozilla.org/?product=firefox-latest-ssl&os=win64&lang=es-ES",
             "archivo": "Firefox Setup.exe",
-            "parametros": "/silent /install"
+            "parametros": "/S"
         },
         {
-        "id": "edge", "estilo": "edge", "sigla": "Ed", "color": "#0078D4",
+            "id": "edge", "estilo": "edge", "sigla": "Ed", "color": "#0078D4",
             "nombre": "Microsoft Edge",
             "desc": "Navegador web de Microsoft con rendimiento y seguridad.",
             "tipo": "url_directa",
@@ -254,14 +272,14 @@ CATALOGO = {
             "parametros": "/silent /install"
         },
         {
-        "id": "opera", "estilo": "opera", "sigla": "Op", "color": "#FF1B2D",
+            "id": "opera", "estilo": "opera", "sigla": "Op", "color": "#FF1B2D",
             "nombre": "Opera Browser",
             "desc": "Navegador web rápido y seguro con funciones integradas.",
             "tipo": "url_directa",
             "url": "https://get.geo.opera.com/ftp/pub/opera/latest/desktop/",
             "archivo": "OperaSetup.exe",
             "parametros": "/silent /install"
-        },
+        }
     ],
     "Adobe": [
         {
@@ -287,8 +305,8 @@ CATALOGO = {
             "nombre": "Adobe Premiere Pro 2026",
             "desc": "Edición de video profesional para cine, televisión y creadores.",
             "tipo": "gdrive",
-            "valor": "https://drive.google.com/file/d/1tNr0SDB2o_BEA0G513M9YLQunbhj0gA2/view?usp=sharing",
-            "archivo_salida": "Adobe_Premiere_Pro_2026.iso",
+            "valor": "https://drive.google.com/file/d/PEGA_AQUI_TU_LINK_DE_PREMIERE/view?usp=sharing",
+            "archivo_salida": "Adobe_Premiere_2026.zip",
             "parametros": ""
         },
         {
@@ -354,16 +372,99 @@ CATALOGO = {
             "valor": "https://drive.google.com/file/d/PEGA_AQUI_TU_LINK_DE_ANIMATE/view?usp=sharing",
             "archivo_salida": "Adobe_Animate_2026.zip",
             "parametros": ""
+        }
+    ],
+    "Autodesk & 3D": [
+        {
+            "id": "autocad", "estilo": "autodesk", "sigla": "CAD", "color": "#E51050",
+            "nombre": "Autodesk AutoCAD 2026",
+            "desc": "Diseño CAD 2D y modelado 3D de precisión para arquitectura e ingeniería.",
+            "tipo": "gdrive",
+            "valor": "https://drive.google.com/file/d/PEGA_AQUI_TU_LINK_DE_AUTOCAD/view?usp=sharing",
+            "archivo_salida": "Autodesk_AutoCAD_2026.iso",
+            "parametros": ""
         },
+        {
+            "id": "revit", "estilo": "autodesk", "sigla": "RVT", "color": "#2B579A",
+            "nombre": "Autodesk Revit 2026",
+            "desc": "Modelado de información de construcción (BIM) para arquitectura e ingeniería.",
+            "tipo": "gdrive",
+            "valor": "https://drive.google.com/file/d/PEGA_AQUI_TU_LINK_DE_REVIT/view?usp=sharing",
+            "archivo_salida": "Autodesk_Revit_2026.iso",
+            "parametros": ""
+        },
+        {
+            "id": "civil3d", "estilo": "autodesk", "sigla": "C3D", "color": "#0078D4",
+            "nombre": "AutoCAD Civil 3D 2026",
+            "desc": "Diseño y documentación para ingeniería civil, topografía y obras viales.",
+            "tipo": "gdrive",
+            "valor": "https://drive.google.com/file/d/PEGA_AQUI_TU_LINK_DE_CIVIL3D/view?usp=sharing",
+            "archivo_salida": "Autodesk_Civil3D_2026.iso",
+            "parametros": ""
+        },
+        {
+            "id": "3dsmax", "estilo": "autodesk", "sigla": "MAX", "color": "#00849B",
+            "nombre": "Autodesk 3ds Max 2026",
+            "desc": "Modelado 3D, animación, simulación y renderizado fotorrealista.",
+            "tipo": "gdrive",
+            "valor": "https://drive.google.com/file/d/PEGA_AQUI_TU_LINK_DE_3DSMAX/view?usp=sharing",
+            "archivo_salida": "Autodesk_3dsMax_2026.iso",
+            "parametros": ""
+        },
+        {
+            "id": "maya", "estilo": "autodesk", "sigla": "MYA", "color": "#10989B",
+            "nombre": "Autodesk Maya 2026",
+            "desc": "Animación 3D profesional, modelado, simulación y efectos visuales para cine.",
+            "tipo": "gdrive",
+            "valor": "https://drive.google.com/file/d/PEGA_AQUI_TU_LINK_DE_MAYA/view?usp=sharing",
+            "archivo_salida": "Autodesk_Maya_2026.iso",
+            "parametros": ""
+        },
+        {
+            "id": "inventor", "estilo": "autodesk", "sigla": "INV", "color": "#D97706",
+            "nombre": "Autodesk Inventor Pro 2026",
+            "desc": "Diseño mecánico 3D, simulación de productos y creación de herramientas.",
+            "tipo": "gdrive",
+            "valor": "https://drive.google.com/file/d/PEGA_AQUI_TU_LINK_DE_INVENTOR/view?usp=sharing",
+            "archivo_salida": "Autodesk_Inventor_2026.iso",
+            "parametros": ""
+        },
+        {
+            "id": "cinema4d", "estilo": "3d", "sigla": "C4D", "color": "#3B82F6",
+            "nombre": "Maxon Cinema 4D 2026",
+            "desc": "Modelado 3D, animación, simulación y Motion Graphics de alto rendimiento.",
+            "tipo": "gdrive",
+            "valor": "https://drive.google.com/file/d/PEGA_AQUI_TU_LINK_DE_CINEMA4D/view?usp=sharing",
+            "archivo_salida": "Cinema4D_2026.zip",
+            "parametros": ""
+        },
+        {
+            "id": "blender", "estilo": "3d", "sigla": "BL", "color": "#F5792A",
+            "nombre": "Blender 3D (64 bits)",
+            "desc": "Suite libre de creación 3D: modelado, rigging, animación, escultura y render.",
+            "tipo": "url_directa",
+            "url": "https://mirror.clarkson.edu/blender/release/Blender4.2/blender-4.2.3-windows-x64.msi",
+            "archivo": "Blender_Setup.msi",
+            "parametros": "/quiet /norestart"
+        }
     ],
     "Office": [
         {
-            "id": "office365", "estilo": "office", "sigla": "365", "color": "#EA580C",
-            "nombre": "Microsoft Office 365 / 2024 ProPlus",
-            "desc": "Suite completa: Word, Excel, PowerPoint, Outlook, Access y OneNote.",
+            "id": "office2024", "estilo": "office", "sigla": "24", "color": "#EA580C",
+            "nombre": "Microsoft Office 2024 LTSC",
+            "desc": "Última versión corporativa 2024: Word, Excel, PowerPoint, Outlook y Access.",
             "tipo": "gdrive",
-            "valor": "https://drive.google.com/file/d/PEGA_AQUI_TU_LINK_DE_OFFICE365/view?usp=sharing",
-            "archivo_salida": "Office_365_ProPlus.zip",
+            "valor": "https://drive.google.com/file/d/PEGA_AQUI_TU_LINK_DE_OFFICE2024/view?usp=sharing",
+            "archivo_salida": "Office_2024_LTSC.zip",
+            "parametros": ""
+        },
+        {
+            "id": "office2022", "estilo": "office", "sigla": "22", "color": "#E11D48",
+            "nombre": "Microsoft Office 2022 ProPlus",
+            "desc": "Suite ofimática completa edición 2022 lista para entornos profesionales.",
+            "tipo": "gdrive",
+            "valor": "https://drive.google.com/file/d/PEGA_AQUI_TU_LINK_DE_OFFICE2022/view?usp=sharing",
+            "archivo_salida": "Office_2022_ProPlus.zip",
             "parametros": ""
         },
         {
@@ -376,12 +477,21 @@ CATALOGO = {
             "parametros": ""
         },
         {
-            "id": "office2019", "estilo": "office", "sigla": "19", "color": "#D97706",
-            "nombre": "Microsoft Office 2019",
-            "desc": "Versión corporativa de largo soporte (Word, Excel, PowerPoint).",
+            "id": "office2019", "estilo": "office", "sigla": "19", "color": "#B45309",
+            "nombre": "Microsoft Office 2019 ProPlus",
+            "desc": "Versión clásica de alto rendimiento compatible con equipos modernos y anteriores.",
             "tipo": "gdrive",
             "valor": "https://drive.google.com/file/d/PEGA_AQUI_TU_LINK_DE_OFFICE2019/view?usp=sharing",
-            "archivo_salida": "Office_2019.zip",
+            "archivo_salida": "Office_2019_ProPlus.zip",
+            "parametros": ""
+        },
+        {
+            "id": "office365", "estilo": "office", "sigla": "365", "color": "#EA580C",
+            "nombre": "Microsoft Office 365 ProPlus",
+            "desc": "Suite conectada: Word, Excel, PowerPoint, Outlook, Access y OneNote.",
+            "tipo": "gdrive",
+            "valor": "https://drive.google.com/file/d/PEGA_AQUI_TU_LINK_DE_OFFICE365/view?usp=sharing",
+            "archivo_salida": "Office_365_ProPlus.zip",
             "parametros": ""
         },
         {
@@ -471,7 +581,6 @@ CATALOGO = {
         }
     ]
 }
-
 
 # ================= CLASE PRINCIPAL DE LA APLICACIÓN =================
 class WorkstationLauncherPro(ctk.CTk):
@@ -572,7 +681,7 @@ class WorkstationLauncherPro(ctk.CTk):
             btn = ctk.CTkButton(
                 self.nav_inner,
                 text=f"{cat}  ({total})",
-                width=155,
+                width=135,  # Reducido de 155 a 135 para acomodar la pestaña Autodesk & 3D
                 height=38,
                 corner_radius=15,
                 font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"),
