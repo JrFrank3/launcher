@@ -113,26 +113,30 @@ def obtener_fuente(tamano):
     return ImageFont.load_default()
 
 
-def generar_icono_programa(id_icono, estilo, sigla, color_hex):
-    ruta_png = os.path.join(CARPETA_ICONOS, f"{id_icono}.png")
-    
-    # Si el icono no existe localmente, intentar descargarlo desde tu GitHub
-    if not os.path.exists(ruta_png):
-        try:
-            url_icono = f"https://raw.githubusercontent.com/JrFrank3/launcher/main/iconos/{id_icono}.png"
-            urllib.request.urlretrieve(url_icono, ruta_png)
-        except Exception:
-            pass # Si no hay internet o falla, pasa al diseño por defecto
-
-    # Si ya existe (o se descargó con éxito), cargarlo
-    if os.path.exists(ruta_png):
-        try:
-            img = Image.open(ruta_png).convert("RGBA")
+def generar_icono_png_desde_url(url_imagen):
+    """Descarga una imagen desde una URL pública (Cloudinary) directo a memoria RAM."""
+    try:
+        req = urllib.request.Request(
+            url_imagen,
+            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+        )
+        with urllib.request.urlopen(req, timeout=5) as respuesta:
+            datos_imagen = respuesta.read()
+            from io import BytesIO
+            img = Image.open(BytesIO(datos_imagen)).convert("RGBA")
             return ctk.CTkImage(light_image=img, dark_image=img, size=(54, 54))
-        except Exception:
-            pass
+    except Exception:
+        return None
 
-    # Respaldo por si el icono tampoco está en GitHub
+def generar_icono_programa(id_icono, estilo, sigla, color_hex):
+    # URL directa a tu carpeta 'iconos' en Cloudinary
+    url_cloudinary = f"https://res.cloudinary.com/z5c6fkvp/image/upload/v1/iconos/{id_icono}.png"
+    
+    icono_remoto = generar_icono_png_desde_url(url_cloudinary)
+    if icono_remoto:
+        return icono_remoto
+
+    # Respaldo automático por si falla la conexión (dibuja el icono por código)
     size = 128
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
@@ -202,11 +206,6 @@ def generar_icono_programa(id_icono, estilo, sigla, color_hex):
         w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]
         draw.text(((size - w) / 2, (size - h) / 2 - 4), sigla, font=fnt, fill="#FFFFFF")
 
-    try:
-        img.save(ruta_png, "PNG")
-    except Exception:
-        pass
-        
     return ctk.CTkImage(light_image=img, dark_image=img, size=(54, 54))
 # ================= CATÁLOGO DE PROGRAMAS =================
 # NOTA: En los programas "gdrive", puedes añadir opcionalmente:
