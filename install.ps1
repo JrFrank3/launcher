@@ -14,8 +14,4 @@ pip install customtkinter pillow gdown --quiet --upgrade
 
 # 4. Ejecutar el script de Python
 Write-Host "Abriendo el launcher..." -ForegroundColor Green
-<<<<<<< HEAD
 python $destinoScript
-=======
-python $destinoScript
->>>>>>> 27b93e96e39d6115970a185dac7b0501dead0a75
