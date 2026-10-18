@@ -52,7 +52,18 @@ TXT_BLANCO = "#FFFFFF"
 TXT_PLATA = "#E2E8F0"
 TXT_GRIS = "#94A3B8"
 
-CARPETA_ICONOS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "iconos")
+# Detectar si estamos ejecutando desde un archivo temporal web o localmente
+if getattr(sys, 'frozen', False):
+    # Si está compilado como .exe
+    BASE_DIR = os.path.dirname(sys.executable)
+elif "__file__" in globals() and os.path.exists(__file__) and "Temp" not in os.path.abspath(__file__):
+    # Si se ejecuta localmente desde tu carpeta de trabajo
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+else:
+    # Si se descarga por PowerShell en la carpeta temporal, forzar a buscar en el Escritorio o crear la carpeta física
+    BASE_DIR = os.path.join(os.path.expanduser("~"), "Desktop", "WorkstationHub")
+
+CARPETA_ICONOS = os.path.join(BASE_DIR, "iconos")
 os.makedirs(CARPETA_ICONOS, exist_ok=True)
 
 
