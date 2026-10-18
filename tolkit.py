@@ -305,8 +305,8 @@ CATALOGO = {
             "nombre": "Adobe Premiere Pro 2026",
             "desc": "Edición de video profesional para cine, televisión y creadores.",
             "tipo": "gdrive",
-            "valor": "https://drive.google.com/file/d/PEGA_AQUI_TU_LINK_DE_PREMIERE/view?usp=sharing",
-            "archivo_salida": "Adobe_Premiere_2026.zip",
+            "valor": "https://drive.google.com/file/d/1tNr0SDB2o_BEA0G513M9YLQunbhj0gA2/view?usp=sharing",
+            "archivo_salida": "Adobe_Premiere_Pro_2026.iso",
             "parametros": ""
         },
         {
@@ -451,7 +451,7 @@ CATALOGO = {
     "Office": [
         {
             "id": "office2024", "estilo": "office", "sigla": "24", "color": "#EA580C",
-            "nombre": "Microsoft Office 2024 LTSC",
+            "nombre": "Microsoft Office 2024 ProPlus",
             "desc": "Última versión corporativa 2024: Word, Excel, PowerPoint, Outlook y Access.",
             "tipo": "gdrive",
             "valor": "https://drive.google.com/file/d/PEGA_AQUI_TU_LINK_DE_OFFICE2024/view?usp=sharing",
@@ -459,17 +459,8 @@ CATALOGO = {
             "parametros": ""
         },
         {
-            "id": "office2022", "estilo": "office", "sigla": "22", "color": "#E11D48",
-            "nombre": "Microsoft Office 2022 ProPlus",
-            "desc": "Suite ofimática completa edición 2022 lista para entornos profesionales.",
-            "tipo": "gdrive",
-            "valor": "https://drive.google.com/file/d/PEGA_AQUI_TU_LINK_DE_OFFICE2022/view?usp=sharing",
-            "archivo_salida": "Office_2022_ProPlus.zip",
-            "parametros": ""
-        },
-        {
             "id": "office2021", "estilo": "office", "sigla": "21", "color": "#D97706",
-            "nombre": "Microsoft Office 2021 LTSC",
+            "nombre": "Microsoft Office 2021 ProPlus",
             "desc": "Versión corporativa estable de largo soporte (Word, Excel, PowerPoint).",
             "tipo": "gdrive",
             "valor": "https://drive.google.com/file/d/PEGA_AQUI_TU_LINK_DE_OFFICE2021/view?usp=sharing",
