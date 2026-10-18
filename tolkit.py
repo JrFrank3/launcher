@@ -427,8 +427,8 @@ CATALOGO = {
             "nombre": "VLC Media Player",
             "desc": "Reproductor multimedia universal para todos los formatos de video y audio.",
             "tipo": "url_directa",
-            "url": "https://get.videolan.org/vlc/3.0.21/win64/vlc-3.0.21-win64.exe",
-            "extension": ".exe",
+            "url": "https://download.videolan.org/pub/videolan/vlc/3.0.21/win64/vlc-3.0.21-win64.exe",
+            "archivo": "VLC_Setup.exe",
             "parametros": "/S"
         },
         {
