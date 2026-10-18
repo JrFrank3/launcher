@@ -115,10 +115,24 @@ def obtener_fuente(tamano):
 
 def generar_icono_programa(id_icono, estilo, sigla, color_hex):
     ruta_png = os.path.join(CARPETA_ICONOS, f"{id_icono}.png")
-    if os.path.exists(ruta_png):
-        img = Image.open(ruta_png).convert("RGBA")
-        return ctk.CTkImage(light_image=img, dark_image=img, size=(54, 54))
+    
+    # Si el icono no existe localmente, intentar descargarlo desde tu GitHub
+    if not os.path.exists(ruta_png):
+        try:
+            url_icono = f"https://raw.githubusercontent.com/JrFrank3/launcher/main/iconos/{id_icono}.png"
+            urllib.request.urlretrieve(url_icono, ruta_png)
+        except Exception:
+            pass # Si no hay internet o falla, pasa al diseño por defecto
 
+    # Si ya existe (o se descargó con éxito), cargarlo
+    if os.path.exists(ruta_png):
+        try:
+            img = Image.open(ruta_png).convert("RGBA")
+            return ctk.CTkImage(light_image=img, dark_image=img, size=(54, 54))
+        except Exception:
+            pass
+
+    # Respaldo por si el icono tampoco está en GitHub
     size = 128
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
@@ -188,10 +202,12 @@ def generar_icono_programa(id_icono, estilo, sigla, color_hex):
         w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]
         draw.text(((size - w) / 2, (size - h) / 2 - 4), sigla, font=fnt, fill="#FFFFFF")
 
-    img.save(ruta_png, "PNG")
+    try:
+        img.save(ruta_png, "PNG")
+    except Exception:
+        pass
+        
     return ctk.CTkImage(light_image=img, dark_image=img, size=(54, 54))
-
-
 # ================= CATÁLOGO DE PROGRAMAS =================
 # NOTA: En los programas "gdrive", puedes añadir opcionalmente:
 #   "ejecutable": "Set-up.exe" (si sabes el nombre exacto, si no lo pones, el programa lo busca solo)
