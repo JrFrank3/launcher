@@ -101,7 +101,6 @@ def obtener_fuente(tamano):
             continue
     return ImageFont.load_default()
 
-
 def generar_icono_programa(id_icono, estilo, sigla, color_hex):
     ruta_png = os.path.join(CARPETA_ICONOS, f"{id_icono}.png")
     if os.path.exists(ruta_png):
