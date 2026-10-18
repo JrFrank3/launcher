@@ -1224,7 +1224,95 @@ class WorkstationLauncherPro(ctk.CTk):
                         fg_color=TEMAS[self.tema_actual]["btn_primario"]
                     )
                 self.after(0, restaurar)
+# ================= VENTANA DE ACCESO / CONTRASEÑA =================
+class VentanaLogin(ctk.CTk):
+    def __init__(self, on_success):
+        super().__init__()
+        self.on_success = on_success
+        self.title("Acceso Protegido WSP . JrFrank 2026")
+        self.geometry("420x260")
+        self.resizable(False, False)
+        self.configure(fg_color=BG_DARK)
+        
+        # Centrar ventana en pantalla
+        self.update_idletasks()
+        ancho = self.winfo_width()
+        alto = self.winfo_height()
+        x = (self.winfo_screenwidth() // 2) - (ancho // 2)
+        y = (self.winfo_screenheight() // 2) - (alto // 2)
+        self.geometry(f"{ancho}x{alto}+{x}+{y}")
 
+        # Título y textos
+        ctk.CTkLabel(
+            self,
+            text="ACCESO RESTRINGIDO",
+            font=ctk.CTkFont(family="Segoe UI", size=18, weight="bold"),
+            text_color=TXT_BLANCO
+        ).pack(pady=(30, 5))
+
+        ctk.CTkLabel(
+            self,
+            text="Ingresa la contraseña de seguridad para continuar:",
+            font=ctk.CTkFont(family="Segoe UI", size=12),
+            text_color=TXT_PLATA
+        ).pack(pady=(0, 15))
+
+        # Campo de contraseña
+        self.entry_pass = ctk.CTkEntry(
+            self,
+            placeholder_text="Contraseña...",
+            show="*",
+            width=280,
+            height=38,
+            corner_radius=8,
+            fg_color="#181924",
+            border_color="#2E3244",
+            text_color=TXT_BLANCO,
+            font=ctk.CTkFont(family="Segoe UI", size=13)
+        )
+        self.entry_pass.pack(pady=5)
+        self.entry_pass.focus()
+        self.entry_pass.bind("<Return>", lambda _e: self.verificar_password())
+
+        # Botón de ingreso
+        btn_ingresar = ctk.CTkButton(
+            self,
+            text="Desbloquear",
+            width=280,
+            height=36,
+            corner_radius=8,
+            font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"),
+            fg_color="#7C3AED",
+            hover_color="#6D28D9",
+            text_color=TXT_BLANCO,
+            command=self.verificar_password
+        )
+        btn_ingresar.pack(pady=12)
+
+        # Etiqueta de error
+        self.lbl_error = ctk.CTkLabel(
+            self,
+            text="",
+            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
+            text_color="#F87171"
+        )
+        self.lbl_error.pack()
+
+    def verificar_password(self):
+        # 🔑 AQUí CAMBIAS TU CONTRASEÑA
+        CONTRASENA_CORRECTA = "JrFrank2026"
+        
+        if self.entry_pass.get() == CONTRASENA_CORRECTA:
+            self.destroy()
+            self.on_success()
+        else:
+            self.lbl_error.configure(text="Contraseña incorrecta. Acceso denegado.")
+            self.entry_pass.delete(0, "end")
 if __name__ == "__main__":
-    app = WorkstationLauncherPro()
-    app.mainloop()
+    def iniciar_sistema():
+        app = WorkstationLauncherPro()
+        app.mainloop()
+
+    # Inicia primero la ventana de contraseña
+    login = VentanaLogin(on_success=iniciar_sistema)
+    login.mainloop()
