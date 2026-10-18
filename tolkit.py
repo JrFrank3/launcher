@@ -428,7 +428,7 @@ CATALOGO = {
             "desc": "Reproductor multimedia universal para todos los formatos de video y audio.",
             "tipo": "url_directa",
             "url": "https://get.videolan.org/vlc/3.0.21/win64/vlc-3.0.21-win64.exe",
-            "archivo": "VLC_Setup.exe",
+            "extension": ".exe",
             "parametros": "/S"
         },
         {
