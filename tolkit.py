@@ -52,18 +52,7 @@ TXT_BLANCO = "#FFFFFF"
 TXT_PLATA = "#E2E8F0"
 TXT_GRIS = "#94A3B8"
 
-# Detectar si estamos ejecutando desde un archivo temporal web o localmente
-if getattr(sys, 'frozen', False):
-    # Si está compilado como .exe
-    BASE_DIR = os.path.dirname(sys.executable)
-elif "__file__" in globals() and os.path.exists(__file__) and "Temp" not in os.path.abspath(__file__):
-    # Si se ejecuta localmente desde tu carpeta de trabajo
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-else:
-    # Si se descarga por PowerShell en la carpeta temporal, forzar a buscar en el Escritorio o crear la carpeta física
-    BASE_DIR = os.path.join(os.path.expanduser("~"), "Desktop", "WorkstationHub")
-
-CARPETA_ICONOS = os.path.join(BASE_DIR, "iconos")
+CARPETA_ICONOS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "iconos")
 os.makedirs(CARPETA_ICONOS, exist_ok=True)
 
 
@@ -113,30 +102,12 @@ def obtener_fuente(tamano):
     return ImageFont.load_default()
 
 
-def generar_icono_png_desde_url(url_imagen):
-    """Descarga una imagen desde una URL pública (Cloudinary) directo a memoria RAM."""
-    try:
-        req = urllib.request.Request(
-            url_imagen,
-            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-        )
-        with urllib.request.urlopen(req, timeout=5) as respuesta:
-            datos_imagen = respuesta.read()
-            from io import BytesIO
-            img = Image.open(BytesIO(datos_imagen)).convert("RGBA")
-            return ctk.CTkImage(light_image=img, dark_image=img, size=(54, 54))
-    except Exception:
-        return None
-
 def generar_icono_programa(id_icono, estilo, sigla, color_hex):
-    # URL directa a tu carpeta 'iconos' en Cloudinary
-    url_cloudinary = f"https://res.cloudinary.com/z5c6fkvp/image/upload/v1/iconos/{id_icono}.png"
-    
-    icono_remoto = generar_icono_png_desde_url(url_cloudinary)
-    if icono_remoto:
-        return icono_remoto
+    ruta_png = os.path.join(CARPETA_ICONOS, f"{id_icono}.png")
+    if os.path.exists(ruta_png):
+        img = Image.open(ruta_png).convert("RGBA")
+        return ctk.CTkImage(light_image=img, dark_image=img, size=(54, 54))
 
-    # Respaldo automático por si falla la conexión (dibuja el icono por código)
     size = 128
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
@@ -206,7 +177,10 @@ def generar_icono_programa(id_icono, estilo, sigla, color_hex):
         w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]
         draw.text(((size - w) / 2, (size - h) / 2 - 4), sigla, font=fnt, fill="#FFFFFF")
 
+    img.save(ruta_png, "PNG")
     return ctk.CTkImage(light_image=img, dark_image=img, size=(54, 54))
+
+
 # ================= CATÁLOGO DE PROGRAMAS =================
 # NOTA: En los programas "gdrive", puedes añadir opcionalmente:
 #   "ejecutable": "Set-up.exe" (si sabes el nombre exacto, si no lo pones, el programa lo busca solo)
