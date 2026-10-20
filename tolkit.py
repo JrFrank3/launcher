@@ -689,7 +689,7 @@ class WorkstationLauncherPro(ctk.CTk):
         self.cache_iconos = {}
         self.seleccionados = {}
         self.vars_check = {}
-        self.title("Auto Instalador Workstation Software Pro . JrFrank 2026")
+        self.title("Auto Instalador Workstation Software Pro . JrFrank 360")
         self.geometry("1920x1220")
         self.minsize(1100, 720)
         self.configure(fg_color=BG_DARK)
@@ -704,7 +704,7 @@ class WorkstationLauncherPro(ctk.CTk):
 
         ctk.CTkLabel(
             brand_frame,
-            text="WORKSTATION SOFTWARE PRO - JRFRANK",
+            text="WORKSTATION SOFTWARE PRO - JRFRANK 360",
             font=ctk.CTkFont(family="Segoe UI", size=20, weight="bold"),
             text_color=TXT_BLANCO
         ).pack(anchor="w")
