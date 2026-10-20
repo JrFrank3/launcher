@@ -19,7 +19,7 @@ ctk.set_appearance_mode("dark")
 TEMAS = {
     "Violeta": {
         "tab_activa": "#DDD6FE",
-        "btn_primario": "#E1ED3A",
+        "btn_primario": "#7C3AED",
         "btn_hover": "#6D28D9",
         "borde_hover": "#A78BFA",
         "consola_txt": "#DDD6FE"
