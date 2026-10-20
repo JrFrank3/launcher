@@ -2,6 +2,8 @@ import os
 import sys
 import re
 import time
+import stat
+import shutil
 import ctypes
 import threading
 import subprocess
@@ -15,7 +17,7 @@ ctk.set_appearance_mode("dark")
 
 # ================= PALETAS DE COLORES =================
 TEMAS = {
-        "Violeta": {
+    "Violeta": {
         "tab_activa": "#DDD6FE",
         "btn_primario": "#7C3AED",
         "btn_hover": "#6D28D9",
@@ -52,8 +54,40 @@ TXT_BLANCO = "#FFFFFF"
 TXT_PLATA = "#E2E8F0"
 TXT_GRIS = "#94A3B8"
 
-CARPETA_ICONOS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "iconos")
-os.makedirs(CARPETA_ICONOS, exist_ok=True)
+
+# ================= CONFIGURADOR DE ICONO DE VENTANA Y BARRA DE TAREAS =================
+def obtener_fuente(tamano):
+    for fuente in ["segoeuib.ttf", "arialbd.ttf", "calibrib.ttf"]:
+        try:
+            return ImageFont.truetype(fuente, tamano)
+        except Exception:
+            continue
+    return ImageFont.load_default()
+
+
+def configurar_icono_app(ventana):
+    """Desvincula el icono de Python en la barra de tareas y aplica el icono propio de JrFrank."""
+    try:
+        myappid = "jrfrank.workstation.launcher.pro.2026"
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+
+        ruta_ico = os.path.join(os.environ.get("TEMP", "."), "jrfrank_app.ico")
+        if not os.path.exists(ruta_ico):
+            size = 128
+            img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+            draw = ImageDraw.Draw(img)
+            draw.rounded_rectangle([4, 4, 124, 124], radius=28, fill="#0E0F14", outline="#7C3AED", width=8)
+            fnt = obtener_fuente(56)
+            sigla = "JF"
+            bbox = draw.textbbox((0, 0), sigla, font=fnt)
+            w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]
+            draw.text(((size - w) / 2, (size - h) / 2 - 6), sigla, font=fnt, fill="#DDD6FE")
+            img.save(ruta_ico, format="ICO", sizes=[(64, 64), (32, 32), (16, 16)])
+
+        ventana.iconbitmap(ruta_ico)
+        ventana.after(200, lambda: ventana.iconbitmap(ruta_ico))
+    except Exception:
+        pass
 
 
 # ================= CAPTURADOR DE CONSOLA PARA BITÁCORA EN VIVO =================
@@ -92,21 +126,8 @@ class CapturadorConsola:
         pass
 
 
-# ================= GENERADOR GRÁFICO DE ICONOS HD =================
-def obtener_fuente(tamano):
-    for fuente in ["segoeuib.ttf", "arialbd.ttf", "calibrib.ttf"]:
-        try:
-            return ImageFont.truetype(fuente, tamano)
-        except Exception:
-            continue
-    return ImageFont.load_default()
-
-def generar_icono_programa(id_icono, estilo, sigla, color_hex):
-    ruta_png = os.path.join(CARPETA_ICONOS, f"{id_icono}.png")
-    if os.path.exists(ruta_png):
-        img = Image.open(ruta_png).convert("RGBA")
-        return ctk.CTkImage(light_image=img, dark_image=img, size=(54, 54))
-
+# ================= GENERADOR GRÁFICO DE ICONOS EN MEMORIA (SIN DESCARGAS) =================
+def generar_icono_programa(_id_icono, estilo, sigla, color_hex):
     size = 128
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
@@ -193,15 +214,11 @@ def generar_icono_programa(id_icono, estilo, sigla, color_hex):
         bbox = draw.textbbox((0, 0), sigla, font=fnt)
         w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]
         draw.text(((size - w) / 2, (size - h) / 2 - 4), sigla, font=fnt, fill="#FFFFFF")
-    
-    img.save(ruta_png, "PNG")
+
     return ctk.CTkImage(light_image=img, dark_image=img, size=(54, 54))
 
 
 # ================= CATÁLOGO DE PROGRAMAS =================
-# NOTA: En los programas "gdrive", puedes añadir opcionalmente:
-#   "ejecutable": "Set-up.exe" (si sabes el nombre exacto, si no lo pones, el programa lo busca solo)
-#   "parametros": "--silent"   (si quieres que corra con algún parámetro especial; si lo dejas vacío "", abre el instalador normal)
 CATALOGO = {
     "Todos": [],
     "Básicos": [
@@ -304,8 +321,8 @@ CATALOGO = {
             "nombre": "Adobe Premiere Pro 2026",
             "desc": "Edición de video profesional para cine, televisión y creadores.",
             "tipo": "gdrive",
-            "valor": "https://drive.google.com/file/d/1tNr0SDB2o_BEA0G513M9YLQunbhj0gA2/view?usp=sharing",
-            "archivo_salida": "Adobe_Premiere_Pro_2026.iso",
+            "valor": "https://drive.google.com/file/d/PEGA_AQUI_TU_LINK_DE_PREMIERE/view?usp=sharing",
+            "archivo_salida": "Adobe_Premiere_2026.iso",
             "parametros": ""
         },
         {
@@ -450,7 +467,7 @@ CATALOGO = {
     "Office": [
         {
             "id": "office2024", "estilo": "office", "sigla": "24", "color": "#EA580C",
-            "nombre": "Microsoft Office 2024 ProPlus",
+            "nombre": "Microsoft Office 2024 LTSC",
             "desc": "Última versión corporativa 2024: Word, Excel, PowerPoint, Outlook y Access.",
             "tipo": "gdrive",
             "valor": "https://drive.google.com/file/d/PEGA_AQUI_TU_LINK_DE_OFFICE2024/view?usp=sharing",
@@ -458,8 +475,17 @@ CATALOGO = {
             "parametros": ""
         },
         {
+            "id": "office2022", "estilo": "office", "sigla": "22", "color": "#E11D48",
+            "nombre": "Microsoft Office 2022 ProPlus",
+            "desc": "Suite ofimática completa edición 2022 lista para entornos profesionales.",
+            "tipo": "gdrive",
+            "valor": "https://drive.google.com/file/d/PEGA_AQUI_TU_LINK_DE_OFFICE2022/view?usp=sharing",
+            "archivo_salida": "Office_2022_ProPlus.zip",
+            "parametros": ""
+        },
+        {
             "id": "office2021", "estilo": "office", "sigla": "21", "color": "#D97706",
-            "nombre": "Microsoft Office 2021 ProPlus",
+            "nombre": "Microsoft Office 2021 LTSC",
             "desc": "Versión corporativa estable de largo soporte (Word, Excel, PowerPoint).",
             "tipo": "gdrive",
             "valor": "https://drive.google.com/file/d/PEGA_AQUI_TU_LINK_DE_OFFICE2021/view?usp=sharing",
@@ -572,10 +598,92 @@ CATALOGO = {
     ]
 }
 
+
+# ================= VENTANA DE ACCESO / CONTRASEÑA =================
+class VentanaLogin(ctk.CTk):
+    def __init__(self, on_success):
+        super().__init__()
+        configurar_icono_app(self)
+        self.on_success = on_success
+        self.title("Acceso Protegido - Workstation Pro")
+        self.geometry("420x260")
+        self.resizable(False, False)
+        self.configure(fg_color=BG_DARK)
+
+        self.update_idletasks()
+        ancho = 420
+        alto = 260
+        x = (self.winfo_screenwidth() // 2) - (ancho // 2)
+        y = (self.winfo_screenheight() // 2) - (alto // 2)
+        self.geometry(f"{ancho}x{alto}+{x}+{y}")
+
+        ctk.CTkLabel(
+            self,
+            text="RESTRICTED ACCESS",
+            font=ctk.CTkFont(family="Segoe UI", size=18, weight="bold"),
+            text_color=TXT_BLANCO
+        ).pack(pady=(30, 5))
+
+        ctk.CTkLabel(
+            self,
+            text="Ingresa la contraseña de seguridad para continuar:",
+            font=ctk.CTkFont(family="Segoe UI", size=12),
+            text_color=TXT_PLATA
+        ).pack(pady=(0, 15))
+
+        self.entry_pass = ctk.CTkEntry(
+            self,
+            placeholder_text="Contraseña...",
+            show="*",
+            width=280,
+            height=38,
+            corner_radius=8,
+            fg_color="#181924",
+            border_color="#2E3244",
+            text_color=TXT_BLANCO,
+            font=ctk.CTkFont(family="Segoe UI", size=13)
+        )
+        self.entry_pass.pack(pady=5)
+        self.entry_pass.focus()
+        self.entry_pass.bind("<Return>", lambda _e: self.verificar_password())
+
+        btn_ingresar = ctk.CTkButton(
+            self,
+            text="Desbloquear",
+            width=280,
+            height=36,
+            corner_radius=8,
+            font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"),
+            fg_color="#7C3AED",
+            hover_color="#6D28D9",
+            text_color=TXT_BLANCO,
+            command=self.verificar_password
+        )
+        btn_ingresar.pack(pady=12)
+
+        self.lbl_error = ctk.CTkLabel(
+            self,
+            text="",
+            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
+            text_color="#F87171"
+        )
+        self.lbl_error.pack()
+
+    def verificar_password(self):
+        CONTRASENA_CORRECTA = "JrFrank2026"
+        if self.entry_pass.get() == CONTRASENA_CORRECTA:
+            self.destroy()
+            self.on_success()
+        else:
+            self.lbl_error.configure(text="Contraseña incorrecta. Acceso denegado.")
+            self.entry_pass.delete(0, "end")
+
+
 # ================= CLASE PRINCIPAL DE LA APLICACIÓN =================
 class WorkstationLauncherPro(ctk.CTk):
     def __init__(self):
         super().__init__()
+        configurar_icono_app(self)
         self.tema_actual = "Violeta"
         self.categoria_actual = "Todos"
         self.cache_iconos = {}
@@ -603,7 +711,7 @@ class WorkstationLauncherPro(ctk.CTk):
 
         self.lbl_sub = ctk.CTkLabel(
             brand_frame,
-            text="EJECUCIÓN AUTOMÁTICA DE INSTALADORES",
+            text="EJECUCIÓN AUTOMÁTICA DE INSTALADORES Y LIMPIEZA",
             font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
             text_color=TEMAS[self.tema_actual]["tab_activa"]
         )
@@ -614,7 +722,7 @@ class WorkstationLauncherPro(ctk.CTk):
 
         self.entry_buscar = ctk.CTkEntry(
             right_controls,
-            placeholder_text="Buscar programa (ej. Photoshop, Word, RAR)...",
+            placeholder_text="Buscar programa (ej. Photoshop, AutoCAD, Word)...",
             width=290,
             height=36,
             corner_radius=8,
@@ -671,7 +779,7 @@ class WorkstationLauncherPro(ctk.CTk):
             btn = ctk.CTkButton(
                 self.nav_inner,
                 text=f"{cat}  ({total})",
-                width=135,  # Reducido de 155 a 135 para acomodar la pestaña Autodesk & 3D
+                width=135,
                 height=38,
                 corner_radius=15,
                 font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"),
@@ -683,24 +791,10 @@ class WorkstationLauncherPro(ctk.CTk):
             btn.pack(side="left", padx=5)
             self.botones_nav[cat] = btn
 
-        btn_carpeta_iconos = ctk.CTkButton(
-            self.nav_bar,
-            text="Carpeta de Iconos",
-            width=145,
-            height=34,
-            corner_radius=10,
-            fg_color="#1E202E",
-            hover_color="#2E3247",
-            text_color=TXT_PLATA,
-            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
-            command=lambda: os.startfile(CARPETA_ICONOS) if os.name == "nt" else None
-        )
-        btn_carpeta_iconos.pack(side="right", padx=26, pady=(4, 14))
-
         self.linea_divisoria = ctk.CTkFrame(self, fg_color=TEMAS[self.tema_actual]["btn_primario"], height=2)
         self.linea_divisoria.pack(fill="x", side="top")
 
-        # ================= 3. ÁREA DE TARJETAS (3 COLUMNAS) =================
+        # ================= 3. ÁREA DE TARJETAS (5 COLUMNAS) =================
         self.scroll_area = ctk.CTkScrollableFrame(
             self,
             fg_color=BG_DARK,
@@ -728,7 +822,7 @@ class WorkstationLauncherPro(ctk.CTk):
 
         ctk.CTkLabel(
             log_top,
-            text="BITÁCORA DE CONSOLA, EXTRACCIÓN Y AUTO-INSTALACIÓN",
+            text="BITÁCORA DE CONSOLA, EXTRACCIÓN, AUTO-INSTALACIÓN Y LIMPIEZA",
             font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
             text_color=TXT_BLANCO
         ).pack(side="left")
@@ -758,7 +852,7 @@ class WorkstationLauncherPro(ctk.CTk):
         self.consola.pack(fill="both", expand=True, padx=12, pady=(2, 10))
         self.consola.configure(state="disabled")
 
-        self.registrar_log("SISTEMA", "Selecciona un programa para descargarlo e iniciar su instalación automáticamente.")
+        self.registrar_log("SISTEMA", "Selecciona un programa para descargarlo, instalarlo y limpiar los residuos automáticamente.")
         self.mostrar_categoria("Todos")
 
     def cargar_todos_los_iconos(self):
@@ -818,14 +912,12 @@ class WorkstationLauncherPro(ctk.CTk):
         self.categoria_actual = categoria
         t = TEMAS[self.tema_actual]
 
-        # Colorear pestañas
         for cat, btn in self.botones_nav.items():
             if cat == categoria:
                 btn.configure(fg_color=t["tab_activa"], text_color=TXT_TAB_ACTIVA, hover_color=t["tab_activa"])
             else:
                 btn.configure(fg_color=TAB_INACTIVA, text_color=TXT_BLANCO, hover_color=TAB_INACTIVA_HOVER)
 
-        # LÓGICA PARA LA PESTAÑA "TODOS"
         if categoria == "Todos":
             lista_total = []
             for cat_nombre, cat_lista in CATALOGO.items():
@@ -860,6 +952,7 @@ class WorkstationLauncherPro(ctk.CTk):
             fila = (idx // 5) + 1
             col = idx % 5
             self.crear_tarjeta_programa(item, fila, col)
+
     def crear_tarjeta_programa(self, item, fila, col):
         t = TEMAS[self.tema_actual]
 
@@ -1003,12 +1096,8 @@ class WorkstationLauncherPro(ctk.CTk):
 
         threading.Thread(target=correr_cola, daemon=True).start()
 
-    # ================= BUSCADOR Y EJECUTOR AUTOMÁTICO DE INSTALADORES =================
+    # ================= EJECUTOR Y LIMPIADOR AUTOMÁTICO =================
     def ejecutar_archivo_instalador(self, ruta_ejecutable, parametros="", nombre_prog="Programa"):
-        """
-        Ejecuta un archivo .exe, .msi o .bat solicitando permisos de administrador si es necesario,
-        y espera a que termine la instalación.
-        """
         carpeta_trabajo = os.path.dirname(ruta_ejecutable)
         nombre_exe = os.path.basename(ruta_ejecutable)
         self.after(0, self.registrar_log, nombre_prog, f"Iniciando instalador: {nombre_exe}...")
@@ -1022,8 +1111,6 @@ class WorkstationLauncherPro(ctk.CTk):
                 cmd = f'"{ruta_ejecutable}" {parametros}'
                 subprocess.run(cmd, cwd=carpeta_trabajo, shell=True, check=True)
             else:
-                # Si no tiene parámetros silenciosos (como el autoplay.exe o Set-up.exe de Adobe),
-                # lo lanza con elevación de Administrador (UAC) y espera a que el instalador abra/termine
                 try:
                     proc = subprocess.Popen(
                         [ruta_ejecutable],
@@ -1032,18 +1119,34 @@ class WorkstationLauncherPro(ctk.CTk):
                     )
                     proc.wait()
                 except OSError:
-                    # Fallback con ShellExecute 'runas' si requiere elevación explícita UAC
-                    ctypes.windll.shell32.ShellExecuteW(
-                        None, "runas", ruta_ejecutable, parametros, carpeta_trabajo, 1
-                    )
+                    cmd_uac = f'powershell -Command "Start-Process -FilePath \'{ruta_ejecutable}\' -WorkingDirectory \'{carpeta_trabajo}\' -Verb RunAs -Wait"'
+                    subprocess.run(cmd_uac, shell=True)
 
-        self.after(0, self.registrar_log, nombre_prog, f"Instalador ({nombre_exe}) ejecutado correctamente.")
+        self.after(0, self.registrar_log, nombre_prog, f"Instalador ({nombre_exe}) finalizado.")
+
+    def limpiar_residuos(self, ruta, nombre_prog="Sistema"):
+        """Elimina archivos instaladores o carpetas completas liberando bloqueos de Windows."""
+        if not ruta or not os.path.exists(ruta):
+            return
+
+        time.sleep(1.5)
+
+        def forzar_borrado(func, path, _exc_info):
+            os.chmod(path, stat.S_IWRITE)
+            func(path)
+
+        try:
+            if os.path.isdir(ruta):
+                shutil.rmtree(ruta, onerror=forzar_borrado)
+                self.after(0, self.registrar_log, nombre_prog, f"Carpeta temporal eliminada: {os.path.basename(ruta)}")
+            else:
+                os.chmod(ruta, stat.S_IWRITE)
+                os.remove(ruta)
+                self.after(0, self.registrar_log, nombre_prog, f"Instalador eliminado: {os.path.basename(ruta)}")
+        except Exception as e:
+            self.after(0, self.registrar_log, nombre_prog, f"Aviso al limpiar {os.path.basename(ruta)}: {e}")
 
     def buscar_y_ejecutar_en_carpeta(self, carpeta_raiz, item):
-        """
-        Busca automáticamente el instalador (.exe / .msi) dentro de la carpeta descomprimida
-        priorizando nombres típicos como autoplay.exe, Set-up.exe, setup.exe, install.exe, etc.
-        """
         nombre_prog = item["nombre"]
         parametros = item.get("parametros", "")
         exe_especifico = item.get("ejecutable", "").lower()
@@ -1052,7 +1155,6 @@ class WorkstationLauncherPro(ctk.CTk):
         for raiz, _dirs, archivos in os.walk(carpeta_raiz):
             for archivo in archivos:
                 lower = archivo.lower()
-                # Ignorar desinstaladores o archivos auxiliares de crash/reporte
                 if any(palabra in lower for palabra in ["unins", "crash", "helper", "vc_redist", "dxsetup"]):
                     continue
                 if lower.endswith((".exe", ".msi", ".bat", ".cmd")):
@@ -1063,12 +1165,11 @@ class WorkstationLauncherPro(ctk.CTk):
         if not candidatos:
             raise RuntimeError(f"No se encontró ningún archivo instalador (.exe/.msi) dentro de {carpeta_raiz}")
 
-        # Orden de prioridad para encontrar el instalador principal automáticamente
         nombres_prioritarios = [
             exe_especifico,
-            "autoplay.exe",     # Muy común en instaladores de Adobe / Repacks
-            "set-up.exe",       # Instalador oficial de Adobe Creative Cloud
-            "setup.exe",        # Instalador estándar de Office y Windows
+            "autoplay.exe",
+            "set-up.exe",
+            "setup.exe",
             "install.exe",
             "instalador.exe",
             "autorun.exe",
@@ -1076,9 +1177,8 @@ class WorkstationLauncherPro(ctk.CTk):
         ]
 
         instalador_elegido = None
-
-        # 1. Buscar coincidencia con los nombres prioritarios (en las carpetas más superficiales primero)
         candidatos.sort(key=lambda x: x[0])
+
         for nombre_prio in nombres_prioritarios:
             if not nombre_prio:
                 continue
@@ -1089,22 +1189,15 @@ class WorkstationLauncherPro(ctk.CTk):
             if instalador_elegido:
                 break
 
-        # 2. Si no se llama setup.exe ni Set-up.exe, tomar el primer .exe principal de menor profundidad
         if not instalador_elegido:
             instalador_elegido = candidatos[0][2]
 
         self.ejecutar_archivo_instalador(instalador_elegido, parametros, nombre_prog)
 
     def procesar_archivo_descargado(self, ruta_archivo, item, lbl_estado=None):
-        """
-        Detecta automáticamente por la firma interna (magic bytes) si el archivo descargado
-        es un .ZIP, .RAR, .7Z o un .EXE directo, lo extrae con la herramienta adecuada
-        y ejecuta el instalador automáticamente.
-        """
         nombre = item["nombre"]
         escritorio = os.path.join(os.path.expanduser("~"), "Desktop")
 
-        # 1. Leer los primeros 8 bytes del archivo para saber su formato real
         with open(ruta_archivo, "rb") as f:
             cabecera = f.read(8)
 
@@ -1115,22 +1208,22 @@ class WorkstationLauncherPro(ctk.CTk):
         es_html = cabecera.lstrip().lower().startswith((b"<!doctype", b"<html"))
         es_iso = ruta_archivo.lower().endswith(".iso")
 
-        # Si Google Drive devolvió una página web de bloqueo en vez del archivo
         if es_html:
-            raise RuntimeError("Google Drive bloqueó la descarga o el archivo requiere permisos públicos.")
-        
+            self.limpiar_residuos(ruta_archivo, nombre)
+            raise RuntimeError("El servidor o Google Drive bloqueó la descarga (requiere permisos públicos).")
+
         # CASO A: Imagen ISO
         if es_iso:
             if lbl_estado:
                 self.after(0, lambda: lbl_estado.configure(text="Montando ISO...", text_color="#FBBF24"))
             self.after(0, self.registrar_log, nombre, f"Montando imagen ISO virtualmente: {os.path.basename(ruta_archivo)}...")
 
-            # Comando de PowerShell para montar la ISO de forma silenciosa y obtener su letra de unidad
             cmd_montar = f'powershell -Command "$mount = Mount-DiskImage -ImagePath \'{ruta_archivo}\' -PassThru; (Get-DiskImage -ImagePath \'{ruta_archivo}\' | Get-Volume).DriveLetter"'
             resultado = subprocess.run(cmd_montar, capture_output=True, text=True, shell=True)
             letra_unidad = resultado.stdout.strip()
 
             if not letra_unidad:
+                self.limpiar_residuos(ruta_archivo, nombre)
                 raise RuntimeError("No se pudo montar la imagen ISO en Windows.")
 
             ruta_iso_montada = f"{letra_unidad}:\\"
@@ -1139,19 +1232,17 @@ class WorkstationLauncherPro(ctk.CTk):
             if lbl_estado:
                 self.after(0, lambda: lbl_estado.configure(text="Instalando...", text_color="#38BDF8"))
 
-            # Buscar y ejecutar el instalador dentro de la unidad virtual de la ISO
             try:
                 self.buscar_y_ejecutar_en_carpeta(ruta_iso_montada, item)
             finally:
-                # Desmontar la ISO de Windows al terminar la instalación
+                if lbl_estado:
+                    self.after(0, lambda: lbl_estado.configure(text="Limpiando...", text_color="#A78BFA"))
                 cmd_desmontar = f'powershell -Command "Dismount-DiskImage -ImagePath \'{ruta_archivo}\'"'
                 subprocess.run(cmd_desmontar, shell=True, capture_output=True)
-
-            if os.path.exists(ruta_archivo):
-                os.remove(ruta_archivo)
+                self.limpiar_residuos(ruta_archivo, nombre)
             return
-        
-        # CASO A: El archivo descargado ya es un ejecutable (.exe) directo aunque tenga otro nombre
+
+        # CASO B: Ejecutable (.exe) directo
         if es_exe and not (es_zip or es_rar or es_7z):
             ruta_exe = ruta_archivo
             if not ruta_exe.lower().endswith(".exe"):
@@ -1162,10 +1253,15 @@ class WorkstationLauncherPro(ctk.CTk):
 
             if lbl_estado:
                 self.after(0, lambda: lbl_estado.configure(text="Instalando...", text_color="#38BDF8"))
-            self.ejecutar_archivo_instalador(ruta_exe, item.get("parametros", ""), nombre)
+            try:
+                self.ejecutar_archivo_instalador(ruta_exe, item.get("parametros", ""), nombre)
+            finally:
+                if lbl_estado:
+                    self.after(0, lambda: lbl_estado.configure(text="Limpiando...", text_color="#A78BFA"))
+                self.limpiar_residuos(ruta_exe, nombre)
             return
 
-        # CASO B: Es un archivo comprimido (.ZIP, .RAR o .7Z)
+        # CASO C: Archivo comprimido (.ZIP, .RAR o .7Z)
         if es_zip or es_rar or es_7z:
             nombre_carpeta = os.path.splitext(os.path.basename(ruta_archivo))[0]
             carpeta_extraida = os.path.join(escritorio, nombre_carpeta)
@@ -1173,52 +1269,58 @@ class WorkstationLauncherPro(ctk.CTk):
 
             formato_real = "ZIP" if es_zip else ("RAR" if es_rar else "7Z")
             if lbl_estado:
-                self.after(0, lambda: lbl_estado.configure(text=f"Extrayendo... {formato_real}...", text_color="#FBBF24"))
+                self.after(0, lambda: lbl_estado.configure(text=f"Extrayendo {formato_real}...", text_color="#FBBF24"))
             self.after(0, self.registrar_log, nombre, f"Formato detectado: {formato_real}. Extrayendo en: {carpeta_extraida}...")
 
-            # Si es .ZIP estándar, usar zipfile de Python
-            if es_zip:
-                with zipfile.ZipFile(ruta_archivo, "r") as zf:
-                    zf.extractall(carpeta_extraida)
-            else:
-                # Si es .RAR o .7Z, buscar WinRAR, 7-Zip o usar el extractor nativo 'tar' de Windows 10/11
-                rutas_extractores = [
-                    r"C:\Program Files\WinRAR\WinRAR.exe",
-                    r"C:\Program Files (x86)\WinRAR\WinRAR.exe",
-                    r"C:\Program Files\7-Zip\7z.exe",
-                    r"C:\Program Files (x86)\7-Zip\7z.exe"
-                ]
-                extractor_encontrado = next((p for p in rutas_extractores if os.path.exists(p)), None)
-
-                if extractor_encontrado and "winrar" in extractor_encontrado.lower():
-                    cmd_ext = f'"{extractor_encontrado}" x -y "{ruta_archivo}" "{carpeta_extraida}\\"'
-                    subprocess.run(cmd_ext, shell=True, check=True)
-                elif extractor_encontrado and "7z" in extractor_encontrado.lower():
-                    cmd_ext = f'"{extractor_encontrado}" x "{ruta_archivo}" -o"{carpeta_extraida}" -y'
-                    subprocess.run(cmd_ext, shell=True, check=True)
+            try:
+                if es_zip:
+                    with zipfile.ZipFile(ruta_archivo, "r") as zf:
+                        zf.extractall(carpeta_extraida)
                 else:
-                    # Extractor nativo integrado en Windows 10/11 (soporta .rar, .7z y .zip)
-                    cmd_ext = f'tar -xf "{ruta_archivo}" -C "{carpeta_extraida}"'
-                    subprocess.run(cmd_ext, shell=True, check=True)
+                    rutas_extractores = [
+                        r"C:\Program Files\WinRAR\WinRAR.exe",
+                        r"C:\Program Files (x86)\WinRAR\WinRAR.exe",
+                        r"C:\Program Files\7-Zip\7z.exe",
+                        r"C:\Program Files (x86)\7-Zip\7z.exe"
+                    ]
+                    extractor_encontrado = next((p for p in rutas_extractores if os.path.exists(p)), None)
 
-            # Borrar el archivo comprimido después de extraerlo para liberar espacio
-            if os.path.exists(ruta_archivo):
-                os.remove(ruta_archivo)
+                    if extractor_encontrado and "winrar" in extractor_encontrado.lower():
+                        cmd_ext = f'"{extractor_encontrado}" x -y "{ruta_archivo}" "{carpeta_extraida}\\"'
+                        subprocess.run(cmd_ext, shell=True, check=True)
+                    elif extractor_encontrado and "7z" in extractor_encontrado.lower():
+                        cmd_ext = f'"{extractor_encontrado}" x "{ruta_archivo}" -o"{carpeta_extraida}" -y'
+                        subprocess.run(cmd_ext, shell=True, check=True)
+                    else:
+                        cmd_ext = f'tar -xf "{ruta_archivo}" -C "{carpeta_extraida}"'
+                        subprocess.run(cmd_ext, shell=True, check=True)
+            finally:
+                self.limpiar_residuos(ruta_archivo, nombre)
 
             if lbl_estado:
                 self.after(0, lambda: lbl_estado.configure(text="Instalando...", text_color="#38BDF8"))
 
-            # Buscar y ejecutar automáticamente el setup.exe / Set-up.exe / autoplay.exe
-            self.buscar_y_ejecutar_en_carpeta(carpeta_extraida, item)
+            try:
+                self.buscar_y_ejecutar_en_carpeta(carpeta_extraida, item)
+            finally:
+                if lbl_estado:
+                    self.after(0, lambda: lbl_estado.configure(text="Limpiando...", text_color="#A78BFA"))
+                self.limpiar_residuos(carpeta_extraida, nombre)
             return
 
-        # CASO C: Si es un instalador .msi directo
+        # CASO D: Instalador .msi directo
         if ruta_archivo.lower().endswith(".msi"):
             if lbl_estado:
                 self.after(0, lambda: lbl_estado.configure(text="Instalando...", text_color="#38BDF8"))
-            self.ejecutar_archivo_instalador(ruta_archivo, item.get("parametros", ""), nombre)
+            try:
+                self.ejecutar_archivo_instalador(ruta_archivo, item.get("parametros", ""), nombre)
+            finally:
+                if lbl_estado:
+                    self.after(0, lambda: lbl_estado.configure(text="Limpiando...", text_color="#A78BFA"))
+                self.limpiar_residuos(ruta_archivo, nombre)
             return
 
+        self.limpiar_residuos(ruta_archivo, nombre)
         raise RuntimeError(f"Formato desconocido (Cabecera: {cabecera}). Asegúrate de subir archivos .zip, .rar, .7z o .exe.")
 
     def ejecutar_descarga_o_comando(self, item, boton=None, lbl_estado=None, barra=None):
@@ -1253,16 +1355,15 @@ class WorkstationLauncherPro(ctk.CTk):
                 if not archivo or not os.path.exists(destino):
                     raise RuntimeError("Verifica que el link de Drive sea público ('Cualquier persona con el enlace').")
 
-                # Extraer e iniciar el instalador automáticamente
                 self.procesar_archivo_descargado(destino, item, lbl_estado)
 
-            # ================= OPCIÓN 2: URL DIRECTA / MEDIAFIRE =================
+            # ================= OPCIÓN 2: URL DIRECTA =================
             elif item["tipo"] == "url_directa":
                 carpeta_temp = os.environ.get("TEMP", os.path.expanduser("~"))
                 ruta_archivo = os.path.join(carpeta_temp, item["archivo"])
                 url = item["url"]
 
-                self.after(0, self.registrar_log, nombre, f"From (original): {url}")
+                self.after(0, self.registrar_log, nombre, f"From: {url}")
                 self.after(0, self.registrar_log, nombre, f"To: {ruta_archivo}")
 
                 req = urllib.request.Request(
@@ -1294,7 +1395,6 @@ class WorkstationLauncherPro(ctk.CTk):
                                 if lbl_estado:
                                     self.after(0, lambda p=pct: lbl_estado.configure(text=f"Descargando... {p}%"))
 
-                # Extraer (si es .zip) e iniciar el instalador automáticamente
                 self.procesar_archivo_descargado(ruta_archivo, item, lbl_estado)
 
             # ================= OPCIÓN 3: COMANDO INTERNO =================
@@ -1304,7 +1404,7 @@ class WorkstationLauncherPro(ctk.CTk):
                 self.after(0, self.registrar_log, nombre, "¡Proceso completado!")
 
             if lbl_estado:
-                self.after(0, lambda: lbl_estado.configure(text="Instalado...", text_color="#34D399"))
+                self.after(0, lambda: lbl_estado.configure(text="Instalado", text_color="#34D399"))
 
         except Exception as err:
             self.after(0, self.registrar_log, nombre, f"ERROR: {str(err)}")
@@ -1323,95 +1423,12 @@ class WorkstationLauncherPro(ctk.CTk):
                         fg_color=TEMAS[self.tema_actual]["btn_primario"]
                     )
                 self.after(0, restaurar)
-# ================= VENTANA DE ACCESO / CONTRASEÑA =================
-class VentanaLogin(ctk.CTk):
-    def __init__(self, on_success):
-        super().__init__()
-        self.on_success = on_success
-        self.title("Acceso Protegido WSP . JrFrank 2026")
-        self.geometry("420x260")
-        self.resizable(False, False)
-        self.configure(fg_color=BG_DARK)
-        
-        # Centrar ventana en pantalla
-        self.update_idletasks()
-        ancho = self.winfo_width()
-        alto = self.winfo_height()
-        x = (self.winfo_screenwidth() // 2) - (ancho // 2)
-        y = (self.winfo_screenheight() // 2) - (alto // 2)
-        self.geometry(f"{ancho}x{alto}+{x}+{y}")
 
-        # Título y textos
-        ctk.CTkLabel(
-            self,
-            text="ACCESO RESTRINGIDO",
-            font=ctk.CTkFont(family="Segoe UI", size=18, weight="bold"),
-            text_color=TXT_BLANCO
-        ).pack(pady=(30, 5))
 
-        ctk.CTkLabel(
-            self,
-            text="Ingresa la contraseña de seguridad para continuar:",
-            font=ctk.CTkFont(family="Segoe UI", size=12),
-            text_color=TXT_PLATA
-        ).pack(pady=(0, 15))
-
-        # Campo de contraseña
-        self.entry_pass = ctk.CTkEntry(
-            self,
-            placeholder_text="Contraseña...",
-            show="*",
-            width=280,
-            height=38,
-            corner_radius=8,
-            fg_color="#181924",
-            border_color="#2E3244",
-            text_color=TXT_BLANCO,
-            font=ctk.CTkFont(family="Segoe UI", size=13)
-        )
-        self.entry_pass.pack(pady=5)
-        self.entry_pass.focus()
-        self.entry_pass.bind("<Return>", lambda _e: self.verificar_password())
-
-        # Botón de ingreso
-        btn_ingresar = ctk.CTkButton(
-            self,
-            text="Desbloquear",
-            width=280,
-            height=36,
-            corner_radius=8,
-            font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"),
-            fg_color="#7C3AED",
-            hover_color="#6D28D9",
-            text_color=TXT_BLANCO,
-            command=self.verificar_password
-        )
-        btn_ingresar.pack(pady=12)
-
-        # Etiqueta de error
-        self.lbl_error = ctk.CTkLabel(
-            self,
-            text="",
-            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
-            text_color="#F87171"
-        )
-        self.lbl_error.pack()
-
-    def verificar_password(self):
-        # 🔑 AQUí CAMBIAS TU CONTRASEÑA
-        CONTRASENA_CORRECTA = "JrFrank2026"
-        
-        if self.entry_pass.get() == CONTRASENA_CORRECTA:
-            self.destroy()
-            self.on_success()
-        else:
-            self.lbl_error.configure(text="Contraseña incorrecta. Acceso denegado.")
-            self.entry_pass.delete(0, "end")
 if __name__ == "__main__":
     def iniciar_sistema():
         app = WorkstationLauncherPro()
         app.mainloop()
 
-    # Inicia primero la ventana de contraseña
     login = VentanaLogin(on_success=iniciar_sistema)
     login.mainloop()
